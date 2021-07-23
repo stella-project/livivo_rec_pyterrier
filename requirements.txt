@@ -1,0 +1,4 @@
+flask
+jsonlines
+pandas
+unidecode
