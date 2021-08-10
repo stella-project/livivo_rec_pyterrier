@@ -1,4 +1,5 @@
 import re
+import os
 import jsonlines
 import pandas as pd
 import unidecode
@@ -10,13 +11,15 @@ if not pt.started():
 
 
 def _livivo_doc_iter():
-    with jsonlines.open('./data/livivo/publications/publications.jsonl') as reader:
-        for obj in reader:
-            title = obj.get('TITLE') or ''
-            title = title[0] if type(title) is list else title
-            abstract = obj.get('ABSTRACT') or ''
-            abstract = abstract[0] if type(abstract) is list else abstract
-            yield {'docno': obj.get('DBRECORDID'), 'text': ' '.join([title, abstract])}
+    for file in os.listdir('./data/livivo/documents/'):
+        if file.endswith(".jsonl"):
+            with jsonlines.open(os.path.join('./data/livivo/documents', file)) as reader:
+                for obj in reader:
+                    title = obj.get('TITLE') or ''
+                    title = title[0] if type(title) is list else title
+                    abstract = obj.get('ABSTRACT') or ''
+                    abstract = abstract[0] if type(abstract) is list else abstract
+                    yield {'docno': obj.get('DBRECORDID'), 'text': ' '.join([title, abstract])}
 
 
 class Ranker(object):
@@ -52,11 +55,13 @@ class Recommender(object):
         indexref = iter_indexer.index(doc_iter)
         self.idx = pt.IndexFactory.of(indexref)
 
-        with jsonlines.open('./data/livivo/publications/publications.jsonl') as reader:
-            for obj in reader:
-                title = obj.get('TITLE') or ''
-                title = title[0] if type(title) is list else title
-                self.title_lookup[obj.get('DBRECORDID')] = title
+        for file in os.listdir('./data/livivo/documents/'):
+            if file.endswith(".jsonl"):
+                with jsonlines.open(os.path.join('./data/livivo/documents', file)) as reader:
+                    for obj in reader:
+                        title = obj.get('TITLE') or ''
+                        title = title[0] if type(title) is list else title
+                        self.title_lookup[obj.get('DBRECORDID')] = title
 
         print(f'# of elems in lookup list: {len(self.title_lookup)}')
 
